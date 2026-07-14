@@ -212,7 +212,9 @@
     <div class="item"><span class="field-label">Leito</span><input type="text" id="cab-leito"></div>
     <div class="item"><span class="field-label">Peso (kg)</span><input type="text" id="cab-peso"></div>
     <div class="item"><span class="field-label">Peso calórico (kg)</span><input type="text" id="cab-peso-calorico"></div>
+    <div class="item"><span class="field-label">Altura (cm)</span><input type="text" id="cab-altura"></div>
     <div class="item"><span class="field-label">Superfície corporal (m²)</span><input type="text" id="cab-sc"></div>
+    <div class="item"><span class="field-label">ClCr (ml/min/1,73m²)</span><input type="text" id="cab-clcr"></div>
   </div>
   <div class="item">
     <span class="field-label">Data e hora da admissão</span>
@@ -285,7 +287,7 @@
 </div>
 
 <!-- ========== DISPOSITIVOS / CULTURAS / EXAMES ========== -->
-<div class="bloco-titulo">Dispositivos, Culturas e Exames</div>
+<div class="bloco-titulo">Dispositivos, Culturas, Exames, Pareceres</div>
 <div class="section">
   <span class="field-label">Dispositivos</span>
   <div class="item">
@@ -331,9 +333,19 @@
   <button type="button" class="btn-add-cultura" id="btn-add-cultura">+ Adicionar cultura</button>
 </div>
 <div class="section">
-  <span class="field-label">Exames principais</span>
-  <div class="lista-itens" id="lista-exames"></div>
-  <button type="button" class="btn-add" data-lista="lista-exames">+ Adicionar item</button>
+  <span class="field-label">Exames de imagem</span>
+  <div class="lista-itens" id="lista-exames-imagem"></div>
+  <button type="button" class="btn-add" data-lista="lista-exames-imagem" data-placeholder="ex: Ecocardiograma (23/02): normal">+ Adicionar item</button>
+</div>
+<div class="section">
+  <span class="field-label">Exames laboratoriais relevantes</span>
+  <div class="lista-itens" id="lista-exames-lab"></div>
+  <button type="button" class="btn-add" data-lista="lista-exames-lab" data-placeholder="ex: Painel Viral (15/06): VSR+">+ Adicionar item</button>
+</div>
+<div class="section">
+  <span class="field-label">Pareceres</span>
+  <div class="lista-itens" id="lista-pareceres"></div>
+  <button type="button" class="btn-add" data-lista="lista-pareceres" data-placeholder="ex: Parecer nefrologista (20/07): manter suporte clínico">+ Adicionar item</button>
 </div>
 
 <!-- ========== EVOLUÇÃO ========== -->
@@ -777,13 +789,15 @@ function criarLinhaLista(container, placeholder) {
 document.querySelectorAll('.btn-add').forEach(btn => {
   btn.addEventListener('click', () => {
     const container = document.getElementById(btn.dataset.lista);
-    criarLinhaLista(container);
+    criarLinhaLista(container, btn.dataset.placeholder);
   });
 });
 // cada lista começa com uma linha
 criarLinhaLista(document.getElementById('lista-cronologia'));
 criarLinhaLista(document.getElementById('lista-hipoteses'));
-criarLinhaLista(document.getElementById('lista-exames'));
+criarLinhaLista(document.getElementById('lista-exames-imagem'), 'ex: Ecocardiograma (23/02): normal');
+criarLinhaLista(document.getElementById('lista-exames-lab'), 'ex: Painel Viral (15/06): VSR+');
+criarLinhaLista(document.getElementById('lista-pareceres'), 'ex: Parecer nefrologista (20/07): manter suporte clínico');
 function coletarLista(id) {
   return Array.from(document.querySelectorAll('#' + id + ' input[type="text"]'))
     .map(i => i.value.trim())
@@ -1103,7 +1117,9 @@ document.getElementById('gerar').addEventListener('click', () => {
   const medUso = coletarMedicacoes('lista-med-uso');
   const medUtilizadas = coletarMedicacoes('lista-med-utilizadas');
   const culturas = coletarCulturas();
-  const exames = coletarLista('lista-exames');
+  const examesImagem = coletarLista('lista-exames-imagem');
+  const examesLab = coletarLista('lista-exames-lab');
+  const pareceres = coletarLista('lista-pareceres');
 
   const dispositivos = [];
   if (checked('disp','cvc')) { const d = getExtraText('disp-extra-cvc'); dispositivos.push('CVC' + (d ? ' ' + d : '')); }
@@ -1150,7 +1166,9 @@ document.getElementById('gerar').addEventListener('click', () => {
   if (val('cab-leito')) idPartes.push('LEITO: ' + val('cab-leito'));
   if (val('cab-peso')) idPartes.push('PESO: ' + val('cab-peso') + ' KG');
   if (val('cab-peso-calorico')) idPartes.push('PESO CALÓRICO: ' + val('cab-peso-calorico') + ' KG');
+  if (val('cab-altura')) idPartes.push('ALTURA: ' + val('cab-altura') + ' CM');
   if (val('cab-sc')) idPartes.push('SC: ' + val('cab-sc') + ' M²');
+  if (val('cab-clcr')) idPartes.push('CLCR: ' + val('cab-clcr') + ' ML/MIN/1,73M²');
   if (idPartes.length) {
     linhas.push(idPartes.join(' // '));
     linhas.push('');
@@ -1190,7 +1208,9 @@ document.getElementById('gerar').addEventListener('click', () => {
   addLista('MEDICAÇÕES UTILIZADAS', medUtilizadas);
   addLista('DISPOSITIVOS', dispositivos);
   addLista('CULTURAS', culturas);
-  addLista('EXAMES PRINCIPAIS', exames);
+  addLista('EXAMES DE IMAGEM', examesImagem);
+  addLista('EXAMES LABORATORIAIS RELEVANTES', examesLab);
+  addLista('PARECERES', pareceres);
   addTexto('EVOLUÇÃO/EXAME FÍSICO DA ADMISSÃO', evolucaoExameFisico);
   addTexto('CONTROLES', controlesTextoFinal);
   if (emVm) {
@@ -1235,7 +1255,9 @@ document.getElementById('limpar').addEventListener('click', () => {
   criarLinhaMedicacao(document.getElementById('lista-med-uso'));
   criarLinhaMedicacao(document.getElementById('lista-med-utilizadas'));
   criarLinhaCultura(document.getElementById('lista-culturas'));
-  criarLinhaLista(document.getElementById('lista-exames'));
+  criarLinhaLista(document.getElementById('lista-exames-imagem'), 'ex: Ecocardiograma (23/02): normal');
+  criarLinhaLista(document.getElementById('lista-exames-lab'), 'ex: Painel Viral (15/06): VSR+');
+  criarLinhaLista(document.getElementById('lista-pareceres'), 'ex: Parecer nefrologista (20/07): manter suporte clínico');
   document.getElementById('ev-impressao').value = 'sem';
   document.getElementById('c-em-vm').value = 'nao';
   document.getElementById('resultado').style.display = 'none';
@@ -1288,7 +1310,9 @@ function coletarEstadoCompleto() {
     listas: {
       'lista-cronologia': coletarListaRaw('lista-cronologia'),
       'lista-hipoteses': coletarListaRaw('lista-hipoteses'),
-      'lista-exames': coletarListaRaw('lista-exames')
+      'lista-exames-imagem': coletarListaRaw('lista-exames-imagem'),
+      'lista-exames-lab': coletarListaRaw('lista-exames-lab'),
+      'lista-pareceres': coletarListaRaw('lista-pareceres')
     },
     culturas: coletarCulturasRaw(),
     medUso: coletarMedicacoesRaw('lista-med-uso'),
@@ -1345,7 +1369,9 @@ function restaurarEstado() {
 
   reconstruirLista('lista-cronologia', criarLinhaLista, (estado.listas && estado.listas['lista-cronologia']) || []);
   reconstruirLista('lista-hipoteses', criarLinhaLista, (estado.listas && estado.listas['lista-hipoteses']) || []);
-  reconstruirLista('lista-exames', criarLinhaLista, (estado.listas && estado.listas['lista-exames']) || []);
+  reconstruirLista('lista-exames-imagem', (c) => criarLinhaLista(c, 'ex: Ecocardiograma (23/02): normal'), (estado.listas && estado.listas['lista-exames-imagem']) || []);
+  reconstruirLista('lista-exames-lab', (c) => criarLinhaLista(c, 'ex: Painel Viral (15/06): VSR+'), (estado.listas && estado.listas['lista-exames-lab']) || []);
+  reconstruirLista('lista-pareceres', (c) => criarLinhaLista(c, 'ex: Parecer nefrologista (20/07): manter suporte clínico'), (estado.listas && estado.listas['lista-pareceres']) || []);
 
   const culturasContainer = document.getElementById('lista-culturas');
   culturasContainer.innerHTML = '';
