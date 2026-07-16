@@ -209,6 +209,13 @@
   </div>
   <div class="grid-2">
     <div class="item"><span class="field-label">Idade</span><input type="text" id="cab-idade" placeholder="ex: 3 anos"></div>
+    <div class="item"><span class="field-label">Sexo</span>
+      <select id="cab-sexo">
+        <option value="">Selecione</option>
+        <option value="Masculino">Masculino</option>
+        <option value="Feminino">Feminino</option>
+      </select>
+    </div>
     <div class="item"><span class="field-label">Leito</span><input type="text" id="cab-leito"></div>
     <div class="item"><span class="field-label">Peso (kg)</span><input type="text" id="cab-peso"></div>
     <div class="item"><span class="field-label">Peso calórico (kg)</span><input type="text" id="cab-peso-calorico"></div>
@@ -764,6 +771,7 @@
 <div id="resultado" style="display:none;">
   <textarea id="texto" readonly></textarea>
   <button id="copiar">Copiar texto</button>
+  <button type="button" class="btn-secundario" id="limpar-resultado">Limpar resultado</button>
   <div class="msg" id="msg">Copiado!</div>
 </div>
 
@@ -907,6 +915,9 @@ function val(id) {
   const el = document.getElementById(id);
   return el && el.value.trim() ? el.value.trim() : '';
 }
+function porGenero(masculino, feminino) {
+  return val('cab-sexo') === 'Feminino' ? feminino : masculino;
+}
 function formatarData(iso) {
   if (!iso) return '00/00/00 as 00:00H';
   const d = new Date(iso);
@@ -928,9 +939,9 @@ function gerarEvolucaoExameFisicoControlesVm() {
   }
 
   let evNeuro = [];
-  if (checked('ev-neuro','consciente')) evNeuro.push('consciente, orientado e ativo');
-  if (checked('ev-neuro','sonolento')) evNeuro.push('sonolento');
-  if (checked('ev-neuro','torporoso')) evNeuro.push('torporoso');
+  if (checked('ev-neuro','consciente')) evNeuro.push('consciente, ' + porGenero('orientado','orientada') + ' e ' + porGenero('ativo','ativa'));
+  if (checked('ev-neuro','sonolento')) evNeuro.push(porGenero('sonolento','sonolenta'));
+  if (checked('ev-neuro','torporoso')) evNeuro.push(porGenero('torporoso','torporosa'));
   if (checked('ev-neuro','comandos')) evNeuro.push('respondendo a comandos simples');
   if (checked('ev-neuro','glasgow')) { const d = getExtraText('ev-extra-glasgow'); evNeuro.push('com Glasgow de' + (d ? ' ' + d : '')); }
   if (checked('ev-neuro','sedado')) { const d = getExtraText('ev-extra-sedado'); evNeuro.push('em sedoanalgesia' + (d ? ' com ' + d : '')); }
@@ -939,22 +950,25 @@ function gerarEvolucaoExameFisicoControlesVm() {
   if (evNeuro.length) partesEv.push(comPrefixoPacienteEv(joinNatural(evNeuro)) + '.');
   if (val('ev-neuro-obs')) partesEv.push(val('ev-neuro-obs'));
 
-  let evCvResp = [];
-  if (checked('ev-cv','estavel')) evCvResp.push('hemodinamicamente estável');
-  if (checked('ev-cv','instavel')) evCvResp.push('hemodinamicamente instável');
-  if (checked('ev-cv','hipotenso')) evCvResp.push('hipotenso');
-  if (checked('ev-cv','ma_perfusao')) evCvResp.push('com sinais de má perfusão');
-  if (checked('ev-cv','hipotermico')) evCvResp.push('hipotérmico');
-  if (checked('ev-cv','sem_dva')) evCvResp.push('sem drogas vasoativas');
-  if (checked('ev-cv','dva')) { const d = getExtraText('ev-extra-dva'); evCvResp.push('em uso de droga vasoativa' + (d ? ' (' + d + ')' : '')); }
-  if (checked('ev-resp','ar_ambiente')) evCvResp.push('eupneico em ar ambiente');
-  if (checked('ev-resp','o2')) { const d = getExtraText('ev-extra-o2'); evCvResp.push('em uso de oxigênio suplementar' + (d ? ' (' + d + ')' : '')); }
-  if (checked('ev-resp','vm')) { const d = getExtraText('ev-extra-vm'); evCvResp.push('em ventilação mecânica' + (d ? ', ' + d : '')); }
-  if (checked('ev-resp','extubado')) { const d = getExtraText('ev-extra-extubado'); evCvResp.push('extubado no plantão' + (d ? ' (' + d + ')' : '') + ', sem intercorrências'); }
-  if (checked('ev-resp','bom_padrao')) evCvResp.push('mantendo bom padrão respiratório');
-  if (checked('ev-resp','sat_adequada')) evCvResp.push('boa saturação de O2');
-  if (evCvResp.length) partesEv.push(comPrefixoPacienteEv(joinNatural(evCvResp)) + '.');
+  let evCv = [];
+  if (checked('ev-cv','estavel')) evCv.push('hemodinamicamente estável');
+  if (checked('ev-cv','instavel')) evCv.push('hemodinamicamente instável');
+  if (checked('ev-cv','hipotenso')) evCv.push(porGenero('hipotenso','hipotensa'));
+  if (checked('ev-cv','ma_perfusao')) evCv.push('com sinais de má perfusão');
+  if (checked('ev-cv','hipotermico')) evCv.push(porGenero('hipotérmico','hipotérmica'));
+  if (checked('ev-cv','sem_dva')) evCv.push('sem drogas vasoativas');
+  if (checked('ev-cv','dva')) { const d = getExtraText('ev-extra-dva'); evCv.push('em uso de droga vasoativa' + (d ? ' (' + d + ')' : '')); }
+  if (evCv.length) partesEv.push(comPrefixoPacienteEv(joinNatural(evCv)) + '.');
   if (val('ev-cv-obs')) partesEv.push(val('ev-cv-obs'));
+
+  let evResp = [];
+  if (checked('ev-resp','ar_ambiente')) evResp.push(porGenero('eupneico','eupneica') + ' em ar ambiente');
+  if (checked('ev-resp','o2')) { const d = getExtraText('ev-extra-o2'); evResp.push('em uso de oxigênio suplementar' + (d ? ' (' + d + ')' : '')); }
+  if (checked('ev-resp','vm')) { const d = getExtraText('ev-extra-vm'); evResp.push('em ventilação mecânica' + (d ? ', ' + d : '')); }
+  if (checked('ev-resp','extubado')) { const d = getExtraText('ev-extra-extubado'); evResp.push(porGenero('extubado','extubada') + ' no plantão' + (d ? ' (' + d + ')' : '') + ', sem intercorrências'); }
+  if (checked('ev-resp','bom_padrao')) evResp.push('mantendo bom padrão respiratório');
+  if (checked('ev-resp','sat_adequada')) evResp.push('boa saturação de O2');
+  if (evResp.length) partesEv.push(comPrefixoPacienteEv(joinNatural(evResp)) + '.');
   if (val('ev-resp-obs')) partesEv.push(val('ev-resp-obs'));
 
   let evGi = [];
@@ -962,7 +976,7 @@ function gerarEvolucaoExameFisicoControlesVm() {
   if (checked('ev-gi','baixa_aceitacao')) evGi.push('com baixa aceitação da dieta');
   if (checked('ev-gi','dieta_enteral')) { const d = getExtraText('ev-extra-dieta-enteral'); evGi.push('retendo bem dieta enteral' + (d ? ' (' + d + ')' : '')); }
   if (checked('ev-gi','npp')) { const d = getExtraText('ev-extra-npp'); evGi.push('recebendo nutrição parenteral' + (d ? ' (' + d + ')' : '')); }
-  if (checked('ev-gi','jejum')) evGi.push('mantido em jejum');
+  if (checked('ev-gi','jejum')) evGi.push(porGenero('mantido','mantida') + ' em jejum');
   if (evGi.length) partesEv.push('Está ' + joinNatural(evGi) + '.');
   if (val('ev-gi-obs')) partesEv.push(val('ev-gi-obs'));
 
@@ -970,7 +984,7 @@ function gerarEvolucaoExameFisicoControlesVm() {
   if (checked('ev-renal','diurese_boa')) evRenal.push('com boa diurese');
   if (checked('ev-renal','diuretico')) { const d = getExtraText('ev-extra-diuretico'); evRenal.push('em uso de diurético' + (d ? ' (' + d + ')' : '')); }
   if (checked('ev-renal','bh')) { const d = getExtraText('ev-extra-bh'); evRenal.push('com balanço hídrico' + (d ? ' ' + d : ' adequado')); }
-  if (checked('ev-renal','oliguria')) evRenal.push('oligúrico');
+  if (checked('ev-renal','oliguria')) evRenal.push(porGenero('oligúrico','oligúrica'));
   if (checked('ev-renal','edema')) { const d = getExtraText('ev-extra-edema'); evRenal.push('com edema' + (d ? ' em ' + d : '')); }
   if (evRenal.length) partesEv.push(comPrefixoPacienteEv(joinNatural(evRenal)) + '.');
   if (val('ev-renal-obs')) partesEv.push(val('ev-renal-obs'));
@@ -1023,23 +1037,23 @@ function gerarEvolucaoExameFisicoControlesVm() {
   }
 
   let efSoma = [];
-  if (checked('ef-soma','acordado')) efSoma.push('acordado, consciente, orientado');
-  if (checked('ef-soma','sonolento')) efSoma.push('sonolento');
-  if (checked('ef-soma','torporoso')) efSoma.push('torporoso');
-  if (checked('ef-soma','reativo')) efSoma.push('reativo');
-  if (checked('ef-soma','colaborativo')) efSoma.push('colaborativo, interagindo bem');
-  if (checked('ef-soma','choroso')) efSoma.push('pouco choroso');
-  if (checked('ef-soma','ativo')) efSoma.push('bastante ativo e reativo');
-  if (checked('ef-soma','hidratado')) efSoma.push('hidratado');
-  if (checked('ef-soma','corado')) efSoma.push('corado');
-  if (checked('ef-soma','hipocorado')) { const d = getExtraText('ef-extra-hipocorado'); efSoma.push('hipocorado' + (d ? ' (' + d + ')' : '')); }
-  if (checked('ef-soma','acianotico')) efSoma.push('acianótico');
-  if (checked('ef-soma','anicterico')) efSoma.push('anictérico');
-  if (checked('ef-soma','ictericia')) { const d = getExtraText('ef-extra-ictericia'); efSoma.push('ictérico' + (d ? ' (' + d + ')' : '')); }
+  if (checked('ef-soma','acordado')) efSoma.push(porGenero('acordado','acordada') + ', consciente, ' + porGenero('orientado','orientada'));
+  if (checked('ef-soma','sonolento')) efSoma.push(porGenero('sonolento','sonolenta'));
+  if (checked('ef-soma','torporoso')) efSoma.push(porGenero('torporoso','torporosa'));
+  if (checked('ef-soma','reativo')) efSoma.push(porGenero('reativo','reativa'));
+  if (checked('ef-soma','colaborativo')) efSoma.push(porGenero('colaborativo','colaborativa') + ', interagindo bem');
+  if (checked('ef-soma','choroso')) efSoma.push('pouco ' + porGenero('choroso','chorosa'));
+  if (checked('ef-soma','ativo')) efSoma.push('bastante ' + porGenero('ativo','ativa') + ' e ' + porGenero('reativo','reativa'));
+  if (checked('ef-soma','hidratado')) efSoma.push(porGenero('hidratado','hidratada'));
+  if (checked('ef-soma','corado')) efSoma.push(porGenero('corado','corada'));
+  if (checked('ef-soma','hipocorado')) { const d = getExtraText('ef-extra-hipocorado'); efSoma.push(porGenero('hipocorado','hipocorada') + (d ? ' (' + d + ')' : '')); }
+  if (checked('ef-soma','acianotico')) efSoma.push(porGenero('acianótico','acianótica'));
+  if (checked('ef-soma','anicterico')) efSoma.push(porGenero('anictérico','anictérica'));
+  if (checked('ef-soma','ictericia')) { const d = getExtraText('ef-extra-ictericia'); efSoma.push(porGenero('ictérico','ictérica') + (d ? ' (' + d + ')' : '')); }
   if (checked('ef-soma','afebril')) efSoma.push('afebril');
   if (checked('ef-soma','febril')) { const d = getExtraText('ef-extra-febril'); efSoma.push('febril' + (d ? ' (' + d + ')' : '')); }
-  if (checked('ef-soma','hipotermico')) efSoma.push('hipotérmico');
-  if (checked('ef-soma','eupneico')) efSoma.push('eupneico em ar ambiente');
+  if (checked('ef-soma','hipotermico')) efSoma.push(porGenero('hipotérmico','hipotérmica'));
+  if (checked('ef-soma','eupneico')) efSoma.push(porGenero('eupneico','eupneica') + ' em ar ambiente');
   if (efSoma.length) partesEf.push(comPrefixoPacienteEf(joinNatural(efSoma)) + '.');
   if (val('ef-soma-obs')) partesEf.push(val('ef-soma-obs'));
 
@@ -1163,6 +1177,7 @@ document.getElementById('gerar').addEventListener('click', () => {
   let idPartes = [];
   if (val('cab-nome')) idPartes.push('NOME: ' + val('cab-nome'));
   if (val('cab-idade')) idPartes.push('IDADE: ' + val('cab-idade'));
+  if (val('cab-sexo')) idPartes.push('SEXO: ' + val('cab-sexo').toUpperCase());
   if (val('cab-leito')) idPartes.push('LEITO: ' + val('cab-leito'));
   if (val('cab-peso')) idPartes.push('PESO: ' + val('cab-peso') + ' KG');
   if (val('cab-peso-calorico')) idPartes.push('PESO CALÓRICO: ' + val('cab-peso-calorico') + ' KG');
@@ -1242,6 +1257,11 @@ document.getElementById('copiar').addEventListener('click', async () => {
     document.execCommand('copy');
     mostrarCopiado();
   }
+});
+
+document.getElementById('limpar-resultado').addEventListener('click', () => {
+  document.getElementById('texto').value = '';
+  document.getElementById('resultado').style.display = 'none';
 });
 
 document.getElementById('limpar').addEventListener('click', () => {
